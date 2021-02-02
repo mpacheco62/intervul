@@ -1,0 +1,59 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+from __future__ import unicode_literals
+from __future__ import print_function
+import numpy as np
+from intervul.readgeo import VulcanDat
+from intervul.vulInterVtk import meshToVtkFormat
+from intervul.writeVTK import WriteVTK
+import os
+import argparse
+
+parser = argparse.ArgumentParser(
+    description='Convierte un archivo .dat de Vulcan a archivos vtk')
+parser.add_argument('fileIn', help="Archivo de dato")
+args = parser.parse_args()
+
+filename = args.fileIn
+base = os.path.basename(filename)
+name = os.path.splitext(base)[0]
+vulDat = VulcanDat(filename)
+
+origMesh = vulDat.mesh
+
+submeshs = meshToVtkFormat(origMesh)
+nsets = len(submeshs)
+
+
+class IteratorsResults:
+    def __init__(self, submeshs):
+        self.submeshs = submeshs
+
+    def time(self):
+        # Tiempo de resultado
+        yield 0.0
+
+    def sets(self):
+        for iset, mesh in self.submeshs.items():
+            # TODO hacer que muestre como resultados los nodos y elementos
+            # originales, o si no, no se puede buscar
+            nodalResult = {'inodeVulcan': mesh.inodeFile}
+            cellResult = {'ielemVulcan': mesh.ielemFile}
+            print(type(mesh.ielemFile))
+            print(type(mesh.inodeFile))
+            print(mesh.ielemFile)
+            yield {
+                'x': mesh.x,
+                'y': mesh.y,
+                'z': mesh.z,
+                'connectivity': mesh.connectivity,
+                'offsets': mesh.offset,
+                'cell_types': mesh.ctype,
+                'cellData': cellResult,
+                'pointData': nodalResult,
+                'fieldData': None,
+            }
+
+
+myiter = IteratorsResults(submeshs)
+WriteVTK(name, myiter.time, myiter.sets, nsets)

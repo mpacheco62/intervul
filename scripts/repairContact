@@ -1,0 +1,80 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+from __future__ import unicode_literals
+from __future__ import print_function
+import numpy as np
+from intervul.readgeo import VulcanDat
+from intervul.general import Submesh
+import os
+import argparse
+import re
+
+parser = argparse.ArgumentParser(
+    description='Convierte un archivo .dat de Vulcan a archivos vtk')
+parser.add_argument('fileIn', help="Archivo de dato")
+parser.add_argument('-s',
+                    help="define el set a repara, default = 2)",
+                    required=False,
+                    type=int,
+                    default=2)
+parser.add_argument(
+        '-d',
+        '--direction',
+        help='Define en que dirección se quiere la fuerza.'
+             '"x", "y", "z" o "[1.0, 1.0, 1.0]"',
+        default='x')
+
+args = parser.parse_args()
+
+filename = args.fileIn
+setToRepair = args.s
+direction = args.direction
+
+if direction.startswith('['):
+    # Separa la lista y normaliza el vector
+    direction = re.split(' +|, *', direction[1:-1])
+    direction = [float(x) for x in direction]
+    norm = np.linalg.norm(direction)
+    direction = [x/norm for x in direction]
+elif direction == 'x':
+    direction = [1.0, 0.0, 0.0]
+elif direction == 'y':
+    direction = [0.0, 1.0, 0.0]
+elif direction == 'z':
+    direction = [0.0, 0.0, 1.0]
+
+base = os.path.basename(filename)
+name = os.path.splitext(base)[0]
+vulDat = VulcanDat(filename)
+
+origMesh = vulDat.mesh
+origMesh.createiFile()
+
+submesh = Submesh(setNum=setToRepair)
+submesh.getSet(mesh=origMesh)
+submesh.nodes3d()
+
+
+flippedElements = 0
+for ielem, elem in enumerate(submesh.elements):
+    node1 = submesh.nodes[elem[0]]
+    node2 = submesh.nodes[elem[1]]
+    node3 = submesh.nodes[elem[-1]]
+    vec1 = node2 - node1
+    vec2 = node3 - node1
+    normal = np.cross(vec1, vec2)
+    toCheck = np.dot(normal, direction)
+    if toCheck < 0:
+        flippedElements += 1
+        nnodes = submesh.typeElem[ielem, 1]
+        ielemOrig = submesh.ielemOriginal[ielem]
+        origMesh.elements[ielemOrig][:nnodes] = np.flip(origMesh.elements[ielemOrig][:nnodes])
+
+
+for ielem, iset, elem, nnodes in zip(origMesh.ielemFile, origMesh.elemsSet, origMesh.getElemsOriginal(), origMesh.typeElem[:, 1]):
+    print(ielem, iset, *elem[:nnodes])
+
+for inode, nodes in zip(origMesh.inodeFile, origMesh.nodes):
+    print(inode, *nodes)
+
+print("FlippedElements: ", flippedElements)

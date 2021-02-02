@@ -1,0 +1,65 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+from __future__ import unicode_literals
+from __future__ import print_function
+from intervul.readpos import VulcanPosMesh
+import os
+import argparse
+
+
+parser = argparse.ArgumentParser(
+                                 description='Extrae los esfuerzos '
+                                 'y desplazamientos nodales para '
+                                 'utilizarlos como condiciones iniciales '
+                                 'en otra simulacion')
+parser.add_argument(
+        '-o',
+        '--fileOutput',
+        help='Indica el nombre del archivo de salida',
+        default=None
+        )
+parser.add_argument('fileIn',
+                    help="Archivo de dato")
+parser.add_argument('-t',
+                    help="Intervalo en el cual se obtienen los "
+                         "desplazamientos y esfuerzos (itime, default=1)",
+                    required=False,
+                    type=int,
+                    default=1)
+parser.add_argument('-s',
+                    help="Paso en el cual se obtienen los desplazamientos "
+                         "y esfuerzos (istep)",
+                    required=True,
+                    type=int)
+
+args = parser.parse_args()
+step_usr = args.s
+time_usr = args.t
+
+filename = args.fileIn
+if args.fileOutput is None:
+    base = os.path.basename(filename)
+    fileout = os.path.splitext(base)[0]+'.ini'
+else:
+    fileout = args.fileOutput
+
+# el set está en forma de base 0 (parte de 0)
+nombre_archivo = filename.replace(".pos", "")
+data = VulcanPosMesh(filename, VulcanPosMesh.MECHANICAL)
+
+print(fileout)
+with open(fileout, 'w') as f:
+    f.write("$" + filename + " Tiempo: " + str(time_usr) +
+            "; Paso: " + str(step_usr)+"\n")
+    for istep, result in data:
+        if ((result['istep'] == step_usr) and (result['itime'] == time_usr)):
+            displa = result['displacement']
+            stress = result['stress']
+            f.write("{:6d}\n".format(displa.shape[0]))
+            for inode, idispla in enumerate(displa, 1):
+                f.write("{:6d} {:11.4E} {:11.4E} {:11.4E}\n".format(
+                        inode, *idispla))
+            f.write("{:6d}\n".format(stress.shape[0]))
+            for inode, istress in enumerate(stress, 1):
+                f.write("{:6d} {:11.4E} {:11.4E} {:11.4E} {:11.4E} "
+                        "{:11.4E} {:11.4E}\n".format(inode, *istress))
