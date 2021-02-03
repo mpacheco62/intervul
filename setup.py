@@ -4,7 +4,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="intervul-mpacheco62",
+    name="intervul",
     version="0.0.1",
     author="Matias Pacheco",
     author_email="Matias.Pacheco.A@gmail.com",
@@ -16,9 +16,9 @@ setuptools.setup(
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
-        "Operating System :: OS Unix",
+        "Operating System :: POSIX :: Linux",
     ],
-    python_requires='>=2.7',
+    python_requires='>=3',
     install_requires=["scipy"],
     scripts=['scripts/geoToVtk', 
              'scripts/getForcesVul',
