@@ -3,7 +3,7 @@
 """Modulo con clases generales
 
 Es un modulo de clases generales, para almacenar información y trabajar con
-ella. Entre ellas:
+ella. Las cuales pueden ser:
 
 - Mesh: un contendor de mallas
 - Results: un contenedor de resultados de vulcan

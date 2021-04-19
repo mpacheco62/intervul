@@ -21,4 +21,7 @@ modpyevtk
 """
 
 from . import readpos
-from intervul.general import ElemTypes, Mesh, AddResults, Results
+from .general import ElemTypes, Mesh, AddResults, Results
+
+from ._datFiles import DatFile
+from . import datFiles

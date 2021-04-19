@@ -75,7 +75,10 @@ def calcPrincipalStress(result):
             # print("StressTensor")
             # print(stressTensor[0])
         stressTensor.shape = (ndata, 3, 3)
-        eigvals, eigvec = np.linalg.eigh(stressTensor)
+        try:
+            eigvals, eigvec = np.linalg.eigh(stressTensor)
+        except np.linalg.LinAlgError:
+            return [None, None, None, None, None, None]
         stressI = eigvals[:, 2]
         stressII = eigvals[:, 1]
         stressIII = eigvals[:, 0]
@@ -99,7 +102,10 @@ def calcPrincipalStrains(result):
             strainTensor = strainVoigt[:, [0, 2, 4, 2, 1, 5, 4, 5, 3]]
         strainTensor[:, [1,2,3,5,6,7]] /= 2.0
         strainTensor.shape = (ndata, 3, 3)
-        eigvals, eigvec = np.linalg.eigh(strainTensor)
+        try:
+            eigvals, eigvec = np.linalg.eigh(strainTensor)
+        except np.linalg.LinAlgError:
+            return [None, None, None, None, None, None]
         strainI = eigvals[:, 2]
         strainII = eigvals[:, 1]
         strainIII = eigvals[:, 0]
@@ -133,7 +139,10 @@ def calcPrincipalStretch(result):
             ##############################################
 
         stretchTensor.shape = (ndata, 3, 3)
-        eigvals, eigvec = np.linalg.eigh(stretchTensor)
+        try:
+            eigvals, eigvec = np.linalg.eigh(stretchTensor)
+        except np.linalg.LinAlgError:
+            return [None, None, None, None, None, None]
 
         ####################################################
         ############ lambda = sqrt(lambda^2) > C ###########
