@@ -22,13 +22,15 @@ class Material_system_of_coordinates(_Properties):
         words, values = self.reader.readLikeVulcan()
         word = words[0]
         ndata = values[0]
+        line = self.reader.next()  # jump nmats
+        words, values = self.reader.readLikeVulcan()
 
         while word[:5] != "END_M":
             temp = line.split()
             temp[0] = int(temp[0])
             temp[1:] = [float(val) for val in temp[1:]]
             self.data.append(temp)
-            self.reader.next()
+            line = self.reader.next()
             words, values = self.reader.readLikeVulcan()
             word = words[0]
 

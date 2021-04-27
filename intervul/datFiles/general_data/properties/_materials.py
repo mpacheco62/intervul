@@ -19,13 +19,20 @@ class Materials(_Properties):
         values = self.reader.values
 
         self.data = []
-        while True:
+        while True:  # TODO DEJAR PARA UN MAXIMO
             if words[0][:5] == "MATER" and words[0][:9] != "MATERIAL_":
                 self._should_be(words[0], "MATERIAL")
                 if words[1] == "SMIEN":
                     self.data.append(Smien(read_by_file=True))
-                    self.reader.next()
+                    line = self.reader.next()
                     words, values = self.reader.readLikeVulcan()
+
+                else:
+                    line = self.reader.next()
+                    words, values = self.reader.readLikeVulcan()
+                    while words[0][:5] != "MATER":
+                        line = self.reader.next()
+                        words, values = self.reader.readLikeVulcan()
 
             else:
                 break

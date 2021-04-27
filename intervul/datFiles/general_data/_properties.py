@@ -38,11 +38,11 @@ class Properties(_General_data):
         words, values = self.reader.readLikeVulcan()
         self.materials = Materials(read_by_file=True)
 
-        self.reader.next()
         words, values = self.reader.readLikeVulcan()
-        self.material_system_of_coordinates = Material_system_of_coordinates(
-                                                             read_by_file=True)
-
+        if words[0][:9] == "MATERIAL_":
+            self.material_system_of_coordinates = (
+                                                Material_system_of_coordinates(
+                                                           read_by_file=True))
         if not self.onDat:
             self.reader = self._originalReader
             _Properties.reader = self.reader
