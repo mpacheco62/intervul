@@ -251,7 +251,6 @@ class VulcanPosMesh (ElemTypes):
             print("Elements: ", self.mesh.elements)
             print("ElemsSet: ", self.mesh.elemsSet)
 
-
     def __iter__(self):
         filename = self.filename
         itype = self.itype
@@ -267,6 +266,17 @@ class VulcanPosMesh (ElemTypes):
         return output['istep'], output
     next = __next__  # Compatibilidad entre python 2 y 3
 
+    def getAllResults(self):
+        results = list()
+        newResults = dict()
+        for istep, result in self:
+            results.append(result)
+
+        for key in result.keys():
+            tempAllTimeResults = [result[key] for result in results]
+            newResults[key] = np.stack(tempAllTimeResults)
+
+        return newResults
 
     def readResult(self):
         result = Results(self.newResults)

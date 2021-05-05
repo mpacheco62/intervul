@@ -499,6 +499,9 @@ class Results:
         }
         self.addNewResults()
 
+    def keys(self):
+        return self.inverse.keys()
+
     def __setitem__(self, index, value):
         itype, dim = self.inverse[index]
         if itype is self.FIELD:
