@@ -32,7 +32,7 @@ def _strToCorrectType(text):
         isNum = True
     except ValueError:
         try:
-            value = float(text)
+            value = float(text.replace("D", "E"))  # Fortran Format for Double
             isNum = True
         except ValueError:
             value = text
