@@ -400,9 +400,10 @@ class VulcanPosMesh (ElemTypes):
 
         if self.velocityExist and self.accelerationExist:
             headerResults = _headerMat(npoin-npoic, ndofc)
-            temp = self.f.read_record(headerResults, headerResults)
-            result['velocity']     = temp[0]
-            result['acceleration'] = temp[1]
+            temp = self.f.read_record(headerResults)
+            result['velocity']     = temp
+            temp = self.f.read_record(headerResults)
+            result['acceleration'] = temp
 
         if self.tempRateExist:
             result['tempRate'] = _readMat(self.f, npoin-npoic, ndofc)
