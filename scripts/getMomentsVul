@@ -11,22 +11,22 @@ import argparse
 import re
 
 def get_direction_from_string(text):
-    if direction.startswith('['):
+    if text.startswith('['):
         # Separa la lista y normaliza el vector
-        direction = re.split(' +|, *', direction[1:-1])
-        direction = [float(x) for x in direction]
-        norm = np.linalg.norm(direction)
-        direction = [x/norm for x in direction]
-    elif direction.lower().startswith('x'):
-        direction = [1.0, 0, 0]
-    elif direction.lower().startswith('y'):
-        direction = [0, 1.0, 0]
-    elif direction.lower().startswith('z'):
-        direction = [0, 0, 1.0]
+        text = re.split(' +|, *', text[1:-1])
+        text = [float(x) for x in text]
+        norm = np.linalg.norm(text)
+        text = [x/norm for x in text]
+    elif text.lower().startswith('x'):
+        text = [1.0, 0, 0]
+    elif text.lower().startswith('y'):
+        text = [0, 1.0, 0]
+    elif text.lower().startswith('z'):
+        text = [0, 0, 1.0]
     else:
         raise ValueError("Direction mal formed")
 
-    return direction
+    return text
 
 
 parser = argparse.ArgumentParser(
@@ -47,8 +47,9 @@ parser.add_argument(
         '-p',
         '--position',
         help='Posicion desde la cual se momenta.'
-             '"x", "y", "z" o "[1.0, 1.0, 1.0]"',
-        default='x')
+             '1.0, 1.0, 1.0',
+        nargs=3,
+        type=float)
 parser.add_argument(
         '-l',
         '--listofnodes',
@@ -69,21 +70,22 @@ fileout = args.fileOutput
 # el set está en forma de base 0 (parte de 0)
 setForce = args.set - 1
 direction = get_direction_from_string(args.direction)
-position = get_direction_from_string(args.position)
+position = args.position
+#print("position", position)
 nodesfile = args.listofnodes
 
 data = VulcanPosMesh(filename, VulcanPosMesh.MECHANICAL)
 mesh = data.mesh
 
 if nodesfile is not None:
-    nodes = np.loadtxt(nodesfile)
+    nodes = np.loadtxt(nodesfile, dtype=int)
 else:
     submesh = Submesh(setNum=setForce)
     submesh.getSet(mesh=mesh)
     nodes = submesh.inodeOriginal
-
+print("nodes", nodes)
 posInitial = mesh.nodes[nodes]
-
+#print(posInitial)
 print(fileout)
 firstPass = True
 with open(fileout, 'w', encoding='utf-8') as f:
@@ -92,13 +94,13 @@ with open(fileout, 'w', encoding='utf-8') as f:
             f.write("# Reaction moment of case\n")
             f.write("# " + result['titleResult'].decode('utf-8').strip() + "\n")
             f.write("# filename: " + filename + "\n")
-            if nodeList:
+            if nodesfile:
                 f.write("# file of nodes: " + nodesfile.name + "\n")
             else:
                 f.write("# set: " + str(setForce + 1) + "\n")
             f.write("# direction: " + str(direction) + "\n")
             f.write("# Time Displacement Moment\n")
-            if nodeList:
+            if nodesfile:
                 print("Extracting forces for filename " + filename + " in list "
                       "of nodes " + nodesfile.name)
             else:
@@ -107,11 +109,17 @@ with open(fileout, 'w', encoding='utf-8') as f:
             firstPass = False
 
         reactionsPerNode = result['reaction'][nodes,:]
+#        print("react", reactionsPerNode)
         displacementPerNode = result['displacement'][nodes,:]
-        finalPos = initPos + displacementPerNode
+#        print("disp", displacementPerNode)
+        finalPos = posInitial + displacementPerNode
+#        print("finalPos", finalPos)
         relativePos = finalPos - position
+#        print("relative", relativePos)
         momentPerNode = np.cross(relativePos, reactionsPerNode)
+#        print("momentPerNode", momentPerNode)
         moment = np.einsum("ij,j -> ", momentPerNode, direction)
+#        print("moment", moment)
         text = "{:8.3f} {:14.6E}".format(result['TimeValue'], moment)
         print(text)
         f.write(text + "\n")
