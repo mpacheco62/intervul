@@ -22,6 +22,7 @@ setuptools.setup(
     install_requires=["scipy"],
     scripts=['scripts/geoToVtk', 
              'scripts/getForcesVul',
+             'scripts/getMomentsVul',
              'scripts/intervtk',
              'scripts/makeInitial',
              'scripts/repairContact'
