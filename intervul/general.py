@@ -441,6 +441,7 @@ class Results:
         self.newResults = newResults
         self.nodal = {
             'scalars': {
+                'temperature': None,
                 'tempRate': None,
                 'phaseChange': None,
                 'internal': None,
@@ -476,6 +477,7 @@ class Results:
             'TimeValue': None
         }
         self.inverse = {
+            'temperature': [self.NODAL, 'scalars'],
             'tempRate': [self.NODAL, 'scalars'],
             'phaseChange': [self.NODAL, 'scalars'],
             'internal': [self.NODAL, 'scalars'],

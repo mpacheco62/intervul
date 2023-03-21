@@ -222,7 +222,12 @@ class VulcanPosMesh (ElemTypes):
         headerResults.append(_headerVec(11, self.intType))
 
         # istat [6] otro puntero
-        headerResults.append(_headerVec(8, self.intType))
+        if self.itype == self.MECHANICAL:
+            headerResults.append(_headerVec(8, self.intType))
+        elif self.itype == self.THERMAL:
+            headerResults.append(_headerVec(4, self.intType))
+        else:
+            headerResults.append(_headerVec(4, self.intType))
 
         geom = self.f.read_record(*headerResults)
 
@@ -378,7 +383,7 @@ class VulcanPosMesh (ElemTypes):
             if nnupc > 0:                             # phase-change function (only thermal; itype=2)
                 self.phaseChangeExist = True
             if ksgau != 0:
-                if self.istat[2] != self.istat[3]:     # internal variables (mechanical or thermal)
+                if self.mesh.istat[2] != self.mesh.istat[3]:     # internal variables (mechanical or thermal)
                     self.fluxExist = True
                 if nnuin != 0:                         # internal variables (mechanical or thermal)
                     self.internalExist = True

@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="intervul",
-    version="0.0.6",
+    version="0.0.7",
     author="Matias Pacheco",
     author_email="Matias.Pacheco.A@gmail.com",
     description="Interfaces for inhouse FEM",

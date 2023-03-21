@@ -23,6 +23,7 @@ def str2bool(v):
 
 parser = argparse.ArgumentParser(
     description='Convierte un archivo .pos de Vulcan a archivos vtk (muchos)')
+
 parser.add_argument(
     '-o',
     '--fileOutput',
@@ -33,42 +34,57 @@ parser.add_argument(
     nargs='?')
 
 parser.add_argument(
-        '-p',
-        '--principalStress',
-        help='Indica si se debe calcular los esfuerzos principales',
+    '-t',
+    '--physics',
+    help='Indica la fisica del caso puede ser mech o term, por defecto mech',
+    choices=['mech', 'term'],
+    default='mech')
+
+parser.add_argument(
+        '-v',
+        '--vonmises',
+        help='Indica si se debe calcular el esfuerzo de Von Mises, por defecto true',
         default=True,
         type=str2bool)
+
+parser.add_argument(
+        '-p',
+        '--principalStress',
+        help='Indica si se debe calcular los esfuerzos principales, por defecto true',
+        default=True,
+        type=str2bool)
+
 parser.add_argument(
         '-s',
         '--principalStrain',
-        help='Indica si se debe calcular las deformaciones principales',
+        help='Indica si se debe calcular las deformaciones principales, por defecto true',
         default=True,
         type=str2bool)
 
 parser.add_argument(
         '-l',
         '--principalStretch',
-        help='Indica si se debe calcular los alargamientos principales',
+        help='Indica si se debe calcular los alargamientos principales, por defecto true',
         default=True,
         type=str2bool)
 
 parser.add_argument(
         '-pM',
         '--principalStressMag',
-        help='Indica si se debe calcular los esfuerzos principales (ordenados por magnitud)',
+        help='Indica si se debe calcular los esfuerzos principales (ordenados por magnitud), por defecto false',
         default=False,
         type=str2bool)
 parser.add_argument(
         '-sM',
         '--principalStrainMag',
-        help='Indica si se debe calcular las deformaciones principales (ordenados por magnitud)',
+        help='Indica si se debe calcular las deformaciones principales (ordenados por magnitud), por defecto false',
         default=False,
         type=str2bool)
 
 parser.add_argument(
         '-lM',
         '--principalStretchMag',
-        help='Indica si se debe calcular los alargamientos principales (ordenados por magnitud)',
+        help='Indica si se debe calcular los alargamientos principales (ordenados por magnitud), por defecto false',
         default=False,
         type=str2bool)
 
@@ -84,9 +100,34 @@ doCalcPrincipalStretch = args.principalStretch
 doCalcPrincipalStressMag = args.principalStressMag
 doCalcPrincipalStrainsMag = args.principalStrainMag
 doCalcPrincipalStretchMag = args.principalStretchMag
+doCalcVonMises = args.vonmises
+
+physics = None
+if args.physics == 'mech': physics = VulcanPosMesh.MECHANICAL
+if args.physics == 'term': physics = VulcanPosMesh.THERMAL
 # print(fileout)
 
 newResults = [] #AQUÍ SE GUARDAN NUEVOS RESULTADOS..... [AddResult(...), AddResult(...), AddResult(...), .....]
+
+
+def calcVonMises(result):
+    if result['stress'] is not None:
+        ndata, nvals = result['stress'].shape
+        s = result['stress']
+        if nvals == 4:
+            vm = (  s[:,0]**2 + s[:,1]**2 + s[:,3]**2
+                  - s[:,0]*s[:,1] - s[:,0]*s[:,3] - s[:,1]*s[:,3] 
+                  + 3*(s[:,2]**2)
+                  )
+        if nvals == 6:
+            vm = (  s[:,0]**2 + s[:,1]**2 + s[:,3]**2
+                  - s[:,0]*s[:,1] - s[:,0]*s[:,3] - s[:,1]*s[:,3] 
+                  + 3*(s[:,2]**2 + s[:,4]**2 + s[:,5]**2)
+                  )
+        return vm**0.5
+    else:
+        return [None]
+
 
 def calcPrincipalStress(result):
     # TODO se asume tension plana para el caso 2D
@@ -277,6 +318,15 @@ def calcMagnitudeStretch(result):
         magnV3 = StretchVec[:,:,0]
         return [magn1, magn2, magn3, magnV1, magnV2, magnV3]
 
+if doCalcVonMises:
+    newResults.append(
+        AddResults(
+            ['scalars'],
+            ['nodal'],
+            ['Vonmises'],
+            calcVonMises)
+    )
+
 if doCalcPrincipalStress:
     newResults.append(
         AddResults(
@@ -334,7 +384,7 @@ if doCalcPrincipalStretchMag:
 
 base = os.path.basename(filename)
 name = os.path.splitext(base)[0]
-data = VulcanPosMesh(filename, VulcanPosMesh.MECHANICAL, newResults=newResults)
+data = VulcanPosMesh(filename, physics, newResults=newResults)
 origMesh = data.mesh
 
 submeshs = meshToVtkFormat(origMesh)
