@@ -271,6 +271,12 @@ class VulcanPosMesh (ElemTypes):
         return output['istep'], output
     next = __next__  # Compatibilidad entre python 2 y 3
 
+
+    def getLastResult(self):
+        for istep, result in self:
+            lastResult = result
+        return lastResult
+
     def getAllResults(self):
         results = list()
         newResults = dict()
