@@ -68,26 +68,6 @@ parser.add_argument(
         default=True,
         type=str2bool)
 
-parser.add_argument(
-        '-pM',
-        '--principalStressMag',
-        help='Indica si se debe calcular los esfuerzos principales (ordenados por magnitud), por defecto false',
-        default=False,
-        type=str2bool)
-parser.add_argument(
-        '-sM',
-        '--principalStrainMag',
-        help='Indica si se debe calcular las deformaciones principales (ordenados por magnitud), por defecto false',
-        default=False,
-        type=str2bool)
-
-parser.add_argument(
-        '-lM',
-        '--principalStretchMag',
-        help='Indica si se debe calcular los alargamientos principales (ordenados por magnitud), por defecto false',
-        default=False,
-        type=str2bool)
-
 
 parser.add_argument('fileIn', help="Archivo de dato")
 args = parser.parse_args()
@@ -170,7 +150,8 @@ def calcPrincipalStrains(result):
     if result['strain'] is not None:
         ndata, nvals = result['strain'].shape
         if nvals == 4:
-            raise Exception("No implementado las deformaciones en 2D")
+            stressVoigt = np.hstack((result['strain'], np.zeros((ndata, 1))))
+            stressTensor = stressVoigt[:, [0, 2, 4, 2, 1, 4, 4, 4, 3]]
         if nvals == 6:
             strainVoigt = result['strain']
             strainTensor = strainVoigt[:, [0, 2, 4, 2, 1, 5, 4, 5, 3]]
@@ -200,7 +181,8 @@ def calcPrincipalStretch(result):
     if result['strain'] is not None:
         ndata, nvals = result['stress'].shape
         if nvals == 4:
-            raise Exception("No implementado las deformaciones en 2D")
+            stressVoigt = np.hstack((result['strain'], np.zeros((ndata, 1))))
+            stressTensor = stressVoigt[:, [0, 2, 4, 2, 1, 4, 4, 4, 3]]
         if nvals == 6:
             stretchVoigt = result['strain']
             stretchTensor = stretchVoigt[:, [0, 2, 4, 2, 1, 5, 4, 5, 3]]
@@ -237,86 +219,6 @@ def calcPrincipalStretch(result):
     else:
         return [None, None, None, None, None, None, None]
 
-
-def calcMagnitudeStress(result):
-    ndata, nvals = result['strain'].shape
-    if nvals == 4:
-        raise Exception("No implementado en 2D")
-    if nvals == 6:
-
-        stress = np.stack((result['StressIII'],
-                           result['StressII'],
-                           result['StressI']), axis=1)
-        stressVec = np.stack((result['StressIII vec'],
-                           result['StressII vec'],
-                           result['StressI vec']), axis=-1)
-
-        p = np.argsort(np.abs(stress),axis=-1) #Crea array con el orden de los eigvals en valor abs
-        stress = np.take_along_axis(stress, p, axis=-1) #Ordena eigvals en el orden p
-        for i in range(len(stress[0])):
-            stressVec[:,i] = np.take_along_axis(stressVec[:,i], p, axis=-1) #ordena cada vector en el orden p
-
-        magn1 = stress[:,2]
-        magn2 = stress[:,1]
-        magn3 = stress[:,0]
-        magnV1 = stressVec[:,:,2]
-        magnV2 = stressVec[:,:,1]
-        magnV3 = stressVec[:,:,0]
-        return [magn1, magn2, magn3, magnV1, magnV2, magnV3]
-
-
-def calcMagnitudeStrain(result):
-    ndata, nvals = result['strain'].shape
-    if nvals == 4:
-        raise Exception("No implementado en 2D")
-    if nvals == 6:
-
-        Strain = np.stack((result['StrainIII'],
-                           result['StrainII'],
-                           result['StrainI']), axis=1)
-        StrainVec = np.stack((result['StrainIII vec'],
-                           result['StrainII vec'],
-                           result['StrainI vec']), axis=-1)
-
-        p = np.argsort(np.abs(Strain),axis=-1) #Crea array con el orden de los eigvals en valor abs
-        Strain = np.take_along_axis(Strain, p, axis=-1) #Ordena eigvals en el orden p
-        for i in range(len(Strain[0])):
-            StrainVec[:,i] = np.take_along_axis(StrainVec[:,i], p, axis=-1) #ordena cada vector en el orden p
-
-        magn1 = Strain[:,2]
-        magn2 = Strain[:,1]
-        magn3 = Strain[:,0]
-        magnV1 = StrainVec[:,:,2]
-        magnV2 = StrainVec[:,:,1]
-        magnV3 = StrainVec[:,:,0]
-        return [magn1, magn2, magn3, magnV1, magnV2, magnV3]
-
-
-def calcMagnitudeStretch(result):
-    ndata, nvals = result['strain'].shape
-    if nvals == 4:
-        raise Exception("No implementado en 2D")
-    if nvals == 6:
-
-        Stretch = np.stack((result['StretchIII'],
-                           result['StretchII'],
-                           result['StretchI']), axis=1)
-        StretchVec = np.stack((result['StretchIII vec'],
-                           result['StretchII vec'],
-                           result['StretchI vec']), axis=-1)
-
-        p = np.argsort(np.abs(Stretch),axis=-1) #Crea array con el orden de los eigvals en valor abs
-        Stretch = np.take_along_axis(Stretch, p, axis=-1) #Ordena eigvals en el orden p
-        for i in range(len(Stretch[0])):
-            StretchVec[:,i] = np.take_along_axis(StretchVec[:,i], p, axis=-1) #ordena cada vector en el orden p
-
-        magn1 = Stretch[:,2]
-        magn2 = Stretch[:,1]
-        magn3 = Stretch[:,0]
-        magnV1 = StretchVec[:,:,2]
-        magnV2 = StretchVec[:,:,1]
-        magnV3 = StretchVec[:,:,0]
-        return [magn1, magn2, magn3, magnV1, magnV2, magnV3]
 
 if doCalcVonMises:
     newResults.append(
@@ -355,32 +257,6 @@ if doCalcPrincipalStretch:
              'StretchIII vec', 'J'],
             calcPrincipalStretch)
             )
-if doCalcPrincipalStressMag:
-     newResults.append(
-       AddResults(
-           ['scalars', 'scalars', 'scalars', 'vectors', 'vectors', 'vectors'],
-           ['nodal', 'nodal', 'nodal', 'nodal', 'nodal', 'nodal'],
-           ['Stress1Mag', 'Stress2Mag', 'Stress3Mag', 'StressIMag Vec','StressIIMag Vec','StressIIIMag Vec'],
-           calcMagnitudeStress)
-       )
-
-if doCalcPrincipalStrainsMag:
-     newResults.append(
-       AddResults(
-           ['scalars', 'scalars', 'scalars', 'vectors', 'vectors', 'vectors'],
-           ['nodal', 'nodal', 'nodal', 'nodal', 'nodal', 'nodal'],
-           ['Strain1Mag', 'Strain2Mag', 'Strain3Mag', 'StrainIMag Vec','StrainIIMag Vec','StrainIIIMag Vec'],
-           calcMagnitudeStrain)
-       )
-
-if doCalcPrincipalStretchMag:
-     newResults.append(
-       AddResults(
-           ['scalars', 'scalars', 'scalars', 'vectors', 'vectors', 'vectors'],
-           ['nodal', 'nodal', 'nodal', 'nodal', 'nodal', 'nodal'],
-           ['Stretch1Mag', 'Stretch2Mag', 'Stretch3Mag', 'StretchIMag Vec','StretchIIMag Vec','StretchIIIMag Vec'],
-           calcMagnitudeStretch)
-       )
 
 base = os.path.basename(filename)
 name = os.path.splitext(base)[0]
