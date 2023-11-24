@@ -148,7 +148,7 @@ def calcPrincipalStrains(result):
         ndata, nvals = result['strain'].shape
         if nvals == 4:
             strainVoigt = np.hstack((result['strain'], np.zeros((ndata, 1))))
-            strainTensor = stressVoigt[:, [0, 2, 4, 2, 1, 4, 4, 4, 3]]
+            strainTensor = strainVoigt[:, [0, 2, 4, 2, 1, 4, 4, 4, 3]]
         if nvals == 6:
             strainVoigt = result['strain']
             strainTensor = strainVoigt[:, [0, 2, 4, 2, 1, 5, 4, 5, 3]]
@@ -179,7 +179,7 @@ def calcPrincipalStretch(result):
         ndata, nvals = result['stress'].shape
         if nvals == 4:
             stretchVoigt = np.hstack((result['strain'], np.zeros((ndata, 1))))
-            stretchTensor = stressVoigt[:, [0, 2, 4, 2, 1, 4, 4, 4, 3]]
+            stretchTensor = stretchVoigt[:, [0, 2, 4, 2, 1, 4, 4, 4, 3]]
         if nvals == 6:
             stretchVoigt = result['strain']
             stretchTensor = stretchVoigt[:, [0, 2, 4, 2, 1, 5, 4, 5, 3]]
