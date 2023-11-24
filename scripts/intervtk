@@ -77,9 +77,6 @@ fileout = args.fileOutput
 doCalcPrincipalStress = args.principalStress
 doCalcPrincipalStrains = args.principalStrain
 doCalcPrincipalStretch = args.principalStretch
-doCalcPrincipalStressMag = args.principalStressMag
-doCalcPrincipalStrainsMag = args.principalStrainMag
-doCalcPrincipalStretchMag = args.principalStretchMag
 doCalcVonMises = args.vonmises
 
 physics = None
